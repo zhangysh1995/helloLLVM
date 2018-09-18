@@ -1,0 +1,1 @@
+add_library(LLVMPassCGT MODULE cgt.cpp)
