@@ -15,9 +15,38 @@
 using namespace llvm;
 
 namespace {
+    struct Hello : public FunctionPass {
+        static char ID;
+        Hello() : FunctionPass(ID) {}
+
+        bool runOnFunction(Function &F) override {
+            errs() << "Hello: ";
+            errs().write_escaped(F.getName()) << '\n';
+            return false;
+        }
+
+	bool getInfo(Function &F) {
+		return true;
+	}
+    };
+}
+
+
+
+
+char Hello::ID = 0;
+
+static RegisterPass<Hello> Hello("hello", "Hello World Pass", false, false);
+
+namespace {
     struct CGT : public ModulePass {
         static char ID;
         CGT() : ModulePass(ID) {}
+	
+	void getAnalysisUsage(AnalysisUsage &AU) const {
+		AU.setPreservesCFG();
+  		AU.addRequired<Hello>();
+	}
 
         bool runOnModule(Module &M) override {
             // construct call graph
@@ -53,4 +82,5 @@ namespace {
 }
 
 char CGT::ID = 0;
-static RegisterPass<CGT> X("cgt", "Test call graph", false, false);
+static RegisterPass<CGT> CGT("cgt", "Test call graph", false, false);
+
