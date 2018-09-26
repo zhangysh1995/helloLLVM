@@ -9,64 +9,77 @@
 #include "llvm/IR/Module.h"
 #include "llvm/Support/raw_ostream.h"
 
-#include "llvm/Analysis/CallGraphSCCPass.h"
+#include "llvm/Analysis/LoopInfo.h"
 #include "llvm/Analysis/CallGraph.h"
+//#include "../fcp/fcp.h"
 
 using namespace llvm;
 
+using std::string;
+
 namespace {
-    struct Hello : public FunctionPass {
+
+    struct FCP : public FunctionPass {
         static char ID;
-        Hello() : FunctionPass(ID) {}
+        FCP() : FunctionPass(ID) {}
 
         bool runOnFunction(Function &F) override {
             errs() << "Hello: ";
             errs().write_escaped(F.getName()) << '\n';
-            return false;
+            return true;
         }
+//
+//        string getInfo() {
+//        	return "called on function";
+//        }
 
-	bool getInfo(Function &F) {
-		return true;
-	}
+
+        bool getInfo(Function &F) {
+        	errs() << "called on function: " << F.getName() ;
+        	return true;
+        }
     };
 }
 
-
-
-
-char Hello::ID = 0;
-
-static RegisterPass<Hello> Hello("hello", "Hello World Pass", false, false);
+    char FCP::ID = 100;
+    static RegisterPass<FCP> FCP("fcp", "FCP", false, true);
 
 namespace {
     struct CGT : public ModulePass {
         static char ID;
         CGT() : ModulePass(ID) {}
 	
-	void getAnalysisUsage(AnalysisUsage &AU) const {
-		AU.setPreservesCFG();
-  		AU.addRequired<Hello>();
-	}
+        virtual void getAnalysisUsage(AnalysisUsage &AU) const{
+        	AU.addRequired<FCP>();
+        }
+
+
+        bool runOnFunction(Function &F) {
+        	errs () << "run here!";
+        	FCP* fcp = &getAnalysis<FCP>(F);
+        }
+
 
         bool runOnModule(Module &M) override {
             // construct call graph
             CallGraph cg = CallGraph(M);
-            errs() << "===== CallGraph dump =====\n";
-            cg.dump();
+//            errs() << "===== CallGraph dump =====\n";
+//            cg.dump();
 
             Module::iterator it = M.begin();
 
             // module is composed of functions
             for ( ; it != M.end(); it++) {
+//            	runOnFunction(*it);
 
                 CallGraphNode *cgn = cg[it];
-                errs() << "===== CallGraphNode dump ===== \n";
-                cgn->dump();
+//                errs() << "===== CallGraphNode dump ===== \n";
+//                cgn->dump();
 
                 // functions contain basic blocks
                 for (Function::iterator j = it->begin(); j != it->end(); j++) {
-                    errs() << "Basic block (name=" << j->getName() << ") has "
-                           << j->size() << " instructions.\n";
+//                    errs() << "Basic block (name=" << j->getName() << ") has "
+//                           << j->size() << " instructions.\n";
 
                     // instructions are in basic block
                     for (BasicBlock::iterator k = j->begin(); k != j->end(); k++) {
